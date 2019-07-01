@@ -1,25 +1,44 @@
 
 def main():
     import nltk
-    from nltk.tokenize import sent_tokenize
-    from nltk import word_tokenize  
     from nltk.corpus import stopwords
 
-    text = getTextFromFiles('test_docs')
+    (dictOfTexts, fullText) = getTextFromFiles('test_docs')
 
-    freqDist = getMostFrequentWords(text).most_common(100)
-    print(freqDist)
+    freqDist = getMostFrequentWords(fullText).most_common(10)
+    hashTags = [w for  (w, num) in freqDist ]
+    finalResultDictionary = {}
+    for hashTag in hashTags:
+      finalResultDictionary[hashTag] = getListOfOccurancesAndSentences(hashTag, dictOfTexts)
+    print(finalResultDictionary)
+
+def getListOfOccurancesAndSentences(hashTag, dictOfTexts):
+  from nltk import sent_tokenize
+  listOfSentences = []
+  listOfFiles = []
+  for (file, text) in dictOfTexts.items():
+    occurs = False
+    for sentence in sent_tokenize(text):
+      if hashTag in sentence:
+        occurs = True
+        listOfSentences.append(sentence.replace(hashTag, hashTag.upper()))
+    if occurs:
+      listOfFiles.append(file)
+  
+  return  (listOfFiles, listOfSentences)
 
 def getTextFromFiles(folder):
     from os import listdir
     from os.path import isfile, join
     onlyfiles = [f for f in listdir(folder) if isfile(join(folder, f))]
-    text = ""
+    fullText = ""
+    dictOfTexts = {}
     for file in onlyfiles:
         textFile = open(folder + '/' + file, encoding="utf8")
         if textFile.mode == "r":
-            text += textFile.read()
-    return text
+            dictOfTexts[file] = textFile.read()
+            fullText += dictOfTexts[file]
+    return (dictOfTexts, fullText)
 
 def getMostFrequentWords(text):
     from nltk import FreqDist
